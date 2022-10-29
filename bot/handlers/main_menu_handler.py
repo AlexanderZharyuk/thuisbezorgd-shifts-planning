@@ -16,11 +16,11 @@ def start(update: Update, context: CallbackContext) -> None:
         [
             InlineKeyboardButton(
                 "💥 Эта неделя",
-                callback_data="weekly_plan"
+                callback_data="current_week_shifts"
             ),
             InlineKeyboardButton(
                 "⏭️ Следующая неделя",
-                callback_data="next_week_plan"
+                callback_data="next_week_shifts"
             ),
         ],
         [

@@ -10,6 +10,11 @@ from bot.general_functions import get_weekly_shifts
 
 
 def get_weekly_schedule(week: str) -> dict:
+    """
+    Return scheduled shifts on week.
+    Variable 'week' can get only one of two parameters: 'current' or 'next'.
+    This variable indicates which week function return.
+    """
     shifts = get_weekly_shifts(week)
     weekly_schedule = defaultdict(list)
     for shift in shifts:
@@ -19,7 +24,10 @@ def get_weekly_schedule(week: str) -> dict:
     return dict(weekly_schedule)
 
 
-def check_weekly_plan(update: Update, context: CallbackContext) -> None:
+def check_weekly_shifts(update: Update, context: CallbackContext) -> None:
+    """
+    Return to user shifts on week.
+    """
     query = update.callback_query
     keyboard = [
         [
@@ -31,13 +39,17 @@ def check_weekly_plan(update: Update, context: CallbackContext) -> None:
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    weekly_schedule = get_weekly_schedule(week="current")
-    message = """<b>План на эту неделю:</b>\n"""
+    week = query.data.split("_")[0]
+    weekly_schedule = get_weekly_schedule(week=week)
+
+    if week == "current":
+        message = """<b>План на эту неделю:</b>\n"""
+    else:
+        message = """<b>План на следующую неделю:</b>\n"""
+
     for date, shift_timings in weekly_schedule.items():
         reformat_shift_timings = "\n".join(shift_timings)
-
         shift_date = datetime.fromisoformat(date)
-
         message += dedent(f"""
         🕛 <b>{shift_date.day} {shift_date.strftime("%B")}</b>
         {reformat_shift_timings}

@@ -5,8 +5,16 @@ from datetime import datetime, timedelta
 
 
 def get_weekly_shifts(week: str) -> list[set]:
+    """
+    Return weekly shift from database.
+    Variable 'week' can get only one of two parameters: 'current' or 'next'.
+    This variable indicates which week function return.
+    """
     today = datetime.today()
     if week == "current":
+        date_of_week_beginning = today - timedelta(days=today.weekday())
+        date_of_week_ending = date_of_week_beginning + timedelta(days=6)
+    elif week == "next":
         date_of_week_beginning = today - timedelta(days=today.weekday())
         date_of_week_ending = date_of_week_beginning + timedelta(days=6)
 

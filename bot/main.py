@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
 
 from handlers.main_menu_handler import start
-from handlers.check_plan_handlers import check_weekly_plan
+from handlers.check_plan_handlers import check_weekly_shifts
 
 
 def main() -> None:
@@ -26,7 +26,16 @@ def main() -> None:
 
     updater.dispatcher.add_handler(CommandHandler("start", start))
     updater.dispatcher.add_handler(
-        CallbackQueryHandler(check_weekly_plan, pattern="weekly_plan")
+        CallbackQueryHandler(
+            check_weekly_shifts,
+            pattern="current_week_shifts"
+        )
+    )
+    updater.dispatcher.add_handler(
+        CallbackQueryHandler(
+            check_weekly_shifts,
+            pattern="next_week_shifts"
+        )
     )
     updater.dispatcher.add_handler(
         CallbackQueryHandler(start, pattern="main_menu")
