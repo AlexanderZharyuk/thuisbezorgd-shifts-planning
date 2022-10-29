@@ -4,10 +4,11 @@ import sqlite3
 from datetime import datetime, timedelta
 
 
-def get_current_weekly_shifts() -> list[set]:
+def get_weekly_shifts(week: str) -> list[set]:
     today = datetime.today()
-    date_of_week_beginning = today - timedelta(days=today.weekday())
-    date_of_week_ending = date_of_week_beginning + timedelta(days=6)
+    if week == "current":
+        date_of_week_beginning = today - timedelta(days=today.weekday())
+        date_of_week_ending = date_of_week_beginning + timedelta(days=6)
 
     database_name = os.environ["DATABASE_NAME"]
     connection = sqlite3.connect(database_name)
