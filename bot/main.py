@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
 
 from handlers.main_menu_handler import start
-from handlers.check_plan_handlers import check_weekly_shifts, check_daily_shift
+from handlers.check_shifts_handlers import (check_weekly_shifts,
+                                            check_daily_shift)
 
 
 def main() -> None:
