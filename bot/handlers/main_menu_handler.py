@@ -15,13 +15,17 @@ def start(update: Update, context: CallbackContext) -> None:
     keyboard = [
         [
             InlineKeyboardButton(
-                "Посмотреть план на неделю",
+                "💥 Эта неделя",
                 callback_data="weekly_plan"
+            ),
+            InlineKeyboardButton(
+                "⏭️ Следующая неделя",
+                callback_data="next_week_plan"
             ),
         ],
         [
             InlineKeyboardButton(
-                "Посмотреть план на сегодня",
+                "📅 План на сегодня",
                 callback_data="daily_plan"
             ),
         ]
