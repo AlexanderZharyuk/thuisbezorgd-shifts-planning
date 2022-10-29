@@ -6,6 +6,12 @@ from telegram.ext import CallbackContext
 
 
 def start(update: Update, context: CallbackContext) -> None:
+    callback = update.callback_query
+    if callback:
+        user_id = update.callback_query.from_user.id
+    else:
+        user_id = update.message.from_user.id
+
     keyboard = [
         [
             InlineKeyboardButton(
@@ -21,7 +27,7 @@ def start(update: Update, context: CallbackContext) -> None:
         ]
     ]
 
-    if update.message.from_user.id == int(os.environ["TELEGRAM_ADMIN_ID"]):
+    if user_id == int(os.environ["TELEGRAM_ADMIN_ID"]):
         admin_functionality = [
             [
                 InlineKeyboardButton(
@@ -56,4 +62,12 @@ def start(update: Update, context: CallbackContext) -> None:
     Этот бот поможет тебе узнать, когда смена у Александра. 
     Нажми на кнопку, чтобы узнать план на неделю или же на сегодняшний день.
     """)
-    update.message.reply_text(message, reply_markup=reply_markup)
+
+    if callback:
+        callback.answer()
+        callback.edit_message_text(
+            text=message,
+            reply_markup=reply_markup
+        )
+    else:
+        update.message.reply_text(message, reply_markup=reply_markup)
