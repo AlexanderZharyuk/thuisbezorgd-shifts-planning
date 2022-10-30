@@ -19,7 +19,7 @@ def get_weekly_shifts(week: str) -> list[set]:
         today = datetime.today()
         day_number = today.weekday()
         if not day_number:
-            date_of_week_beginning = today
+            date_of_week_beginning = today + timedelta(days=7)
         else:
             date_of_week_beginning = today + timedelta(days=7 - day_number)
 
