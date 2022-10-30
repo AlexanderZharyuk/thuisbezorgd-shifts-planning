@@ -1,11 +1,25 @@
 import os
+
 from textwrap import dedent
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CallbackContext
 
+from bot.conversation_states import States
 
-def start(update: Update, context: CallbackContext) -> None:
+
+def start(update: Update, context: CallbackContext) -> States:
+    if context.user_data.get("message_id"):
+        context.bot.delete_message(
+            chat_id=context.user_data.get("chat_id"),
+            message_id=context.user_data.get("message_id")
+        )
+        context.bot.delete_message(
+            chat_id=context.user_data.get("chat_id"),
+            message_id=update.message.message_id
+        )
+        del context.user_data["message_id"]
+
     callback = update.callback_query
     if callback:
         user_id = update.callback_query.from_user.id
@@ -75,3 +89,5 @@ def start(update: Update, context: CallbackContext) -> None:
         )
     else:
         update.message.reply_text(message, reply_markup=reply_markup)
+
+    return States.CHOOSING
