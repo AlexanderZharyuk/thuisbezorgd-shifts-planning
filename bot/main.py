@@ -18,7 +18,8 @@ def main() -> None:
     cursor = connection.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS shifts
-        ([shift_id] INTEGER PRIMARY KEY, [shift_time_starts] TEXT, 
+        ([shift_id] INTEGER PRIMARY KEY AUTOINCREMENT,
+         [shift_time_starts] TEXT, 
         [shift_time_ends] TEXT, [shift_date] TEXT)
     """)
     connection.commit()
