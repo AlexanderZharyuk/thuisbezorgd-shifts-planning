@@ -5,6 +5,9 @@ from textwrap import dedent
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CallbackContext
 
+import sys
+sys.path.append(".")
+
 from bot.conversation_states import States
 
 
