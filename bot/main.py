@@ -2,11 +2,13 @@ import os
 import sqlite3
 
 from dotenv import load_dotenv
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
+from telegram.ext import (Updater, CommandHandler, CallbackQueryHandler,
+                          ConversationHandler, MessageHandler, Filters)
 
-from handlers.main_menu_handler import start
+from handlers.main_menu_handler import start, States
 from handlers.check_shifts_handlers import (check_weekly_shifts,
                                             check_daily_shift)
+from handlers.new_shifts_handlers import wait_shifts_from_user, update_shifts
 
 
 def main() -> None:
@@ -26,7 +28,6 @@ def main() -> None:
 
     updater = Updater(telegram_bot_token)
 
-    updater.dispatcher.add_handler(CommandHandler("start", start))
     updater.dispatcher.add_handler(
         CallbackQueryHandler(
             check_weekly_shifts,
@@ -48,6 +49,31 @@ def main() -> None:
     updater.dispatcher.add_handler(
         CallbackQueryHandler(start, pattern="main_menu")
     )
+
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler("start", start)],
+        states={
+            States.CHOOSING: [
+                CallbackQueryHandler(
+                    wait_shifts_from_user,
+                    pattern="update_next_weekly_plan"
+                )
+            ],
+            States.WEEKLY_SHIFTS: [
+                CallbackQueryHandler(
+                    start,
+                    pattern="main_menu"
+                ),
+                MessageHandler(
+                    Filters.text, update_shifts
+                ),
+            ]
+        },
+        fallbacks=[MessageHandler(Filters.regex('^Done$'), None)],
+        name="conversation",
+        allow_reentry=True,
+    )
+    updater.dispatcher.add_handler(conv_handler)
 
     updater.start_polling()
     updater.idle()
