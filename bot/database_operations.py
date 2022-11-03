@@ -90,15 +90,19 @@ def update_next_week_shifts(text: str):
     connection = sqlite3.connect(database_name)
     cursor = connection.cursor()
 
+    shifts = []
     for shift_date, shift_timings in schedule.items():
         for time in shift_timings:
-            query = f"""
-                INSERT INTO shifts(
-                 shift_date,
-                 shift_time_starts,
-                 shift_time_ends
-                 ) VALUES (?, ?, ?)
-                """
             shift_start, shift_end = time.split(" - ")
-            cursor.execute(query, (shift_date, shift_start, shift_end))
-            connection.commit()
+            shift_info = (shift_date, shift_start, shift_end)
+            shifts.append(shift_info)
+
+    query = f"""
+        INSERT INTO shifts(
+         shift_date,
+         shift_time_starts,
+         shift_time_ends
+         ) VALUES (?, ?, ?)
+        """
+    cursor.executemany(query, shifts)
+    connection.commit()
