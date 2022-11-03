@@ -5,25 +5,63 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 
 
-def get_weekly_shifts(week: str) -> list[set]:
+def calculate_weekdays(week: str) -> tuple[datetime, datetime]:
     """
-    Return weekly shift from database.
-    Variable 'week' can get only one of two parameters: 'current' or 'next'.
-    This variable indicates which week function return.
+    Calculate week beginning and starting dates.
     """
     today = datetime.today()
     if week == "current":
         date_of_week_beginning = today - timedelta(days=today.weekday())
         date_of_week_ending = date_of_week_beginning + timedelta(days=6)
     elif week == "next":
-        today = datetime.today()
         day_number = today.weekday()
         if not day_number:
             date_of_week_beginning = today + timedelta(days=7)
         else:
             date_of_week_beginning = today + timedelta(days=7 - day_number)
-
         date_of_week_ending = date_of_week_beginning + timedelta(days=6)
+    elif week == "previous":
+        day_number = today.weekday()
+        if not day_number:
+            date_of_week_beginning = today - timedelta(days=7)
+        else:
+            date_of_week_beginning = today - timedelta(days=7 + day_number)
+        date_of_week_ending = date_of_week_beginning + timedelta(days=6)
+
+    return date_of_week_beginning.date(), date_of_week_ending.date()
+
+
+def _parse_shifts_text(text: str) -> dict:
+    """
+    Parse text from user to dict-format.
+    """
+    shifts = text.split("\n")
+    schedule = defaultdict(list)
+
+    for shift in shifts:
+        if not shift:
+            continue
+
+        if len(shift.split("-")) > 2:
+            shift_day = datetime.strptime(
+                shift.replace(":", ""),
+                "%d-%m-%Y"
+            ).date()
+            continue
+
+        schedule[shift_day].append(shift)
+
+    return dict(schedule)
+
+
+def get_weekly_shifts(week: str) -> list[set]:
+    """
+    Return weekly shift from database.
+    Variable 'week' can get only one of three parameters: 'current', 'next' or
+    'previous'.
+    This variable indicates which week function return.
+    """
+    date_of_week_beginning, date_of_week_ending = calculate_weekdays(week)
 
     database_name = os.environ["DATABASE_NAME"]
     connection = sqlite3.connect(database_name)
@@ -31,8 +69,8 @@ def get_weekly_shifts(week: str) -> list[set]:
 
     query = f"""
     SELECT * FROM shifts
-    WHERE shift_date BETWEEN '{date_of_week_beginning.date()}'
-    AND '{date_of_week_ending.date()}'
+    WHERE shift_date BETWEEN '{date_of_week_beginning}'
+    AND '{date_of_week_ending}'
     ORDER BY shift_date
     """
     cursor.execute(query)
@@ -57,34 +95,11 @@ def get_daily_shifts() -> str:
     return cursor.fetchall()
 
 
-def parse_shifts_text(text: str) -> dict:
-    """
-    Parse text from user to dict-format.
-    """
-    shifts = text.split("\n")
-    schedule = defaultdict(list)
-
-    for shift in shifts:
-        if not shift:
-            continue
-
-        if len(shift.split("-")) > 2:
-            shift_day = datetime.strptime(
-                shift.replace(":", ""),
-                "%d-%m-%Y"
-            ).date()
-            continue
-
-        schedule[shift_day].append(shift)
-
-    return dict(schedule)
-
-
 def update_next_week_shifts(text: str):
     """
     Record to DB shifts on next week.
     """
-    schedule = parse_shifts_text(text)
+    schedule = _parse_shifts_text(text)
     database_name = os.environ["DATABASE_NAME"]
     connection = sqlite3.connect(database_name)
     cursor = connection.cursor()
