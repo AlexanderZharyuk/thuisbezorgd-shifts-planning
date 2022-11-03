@@ -94,8 +94,10 @@ def update_next_week_shifts(text: str):
         for time in shift_timings:
             query = f"""
                 INSERT INTO shifts(
-                shift_date, shift_time_starts, shift_time_ends)
-                 VALUES (?, ?, ?)
+                 shift_date,
+                 shift_time_starts,
+                 shift_time_ends
+                 ) VALUES (?, ?, ?)
                 """
             shift_start, shift_end = time.split(" - ")
             cursor.execute(query, (shift_date, shift_start, shift_end))
