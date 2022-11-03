@@ -6,7 +6,7 @@ from telegram import (Update, InlineKeyboardButton,
                       InlineKeyboardMarkup, ParseMode)
 from telegram.ext import CallbackContext
 
-from bot.general_functions import get_weekly_shifts, get_daily_shifts
+from bot.database_operations import get_weekly_shifts, get_daily_shifts
 
 
 def prepare_keyboard() -> InlineKeyboardMarkup:

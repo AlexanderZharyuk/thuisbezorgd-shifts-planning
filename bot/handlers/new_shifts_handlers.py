@@ -4,7 +4,7 @@ from telegram import Update
 from telegram.ext import CallbackContext
 
 from bot.conversation_states import States
-from bot.general_functions import update_next_week_shifts
+from bot.database_operations import update_next_week_shifts
 
 
 def wait_shifts_from_user(update: Update, context: CallbackContext) -> States:
