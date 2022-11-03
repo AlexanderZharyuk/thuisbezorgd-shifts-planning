@@ -40,7 +40,7 @@ def prepare_shifts_message(schedule: dict) -> str:
     return message
 
 
-def get_shifts_timings(shifts) -> dict:
+def get_shifts_timings(shifts: list) -> dict:
     """
     Return shift timings.
     """
