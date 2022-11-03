@@ -1,3 +1,4 @@
+from calendar import day_name
 from datetime import datetime
 from collections import defaultdict
 from textwrap import dedent
@@ -33,10 +34,11 @@ def prepare_shifts_message(schedule: dict) -> str:
     for date, shift_timings in schedule.items():
         reformat_shift_timings = "\n".join(shift_timings)
         shift_date = datetime.fromisoformat(date)
+        shift_day = day_name[shift_date.weekday()]
         message += dedent(f"""
-           🕛 <b>{shift_date.day} {shift_date.strftime("%B")}</b>
+           🕛 <b>{shift_date.day} {shift_date.strftime("%B")}, {shift_day}</b>
           {reformat_shift_timings}
-           ------------------------""").replace("  ", "")
+           -------------------------------""").replace("  ", "")
     return message
 
 
