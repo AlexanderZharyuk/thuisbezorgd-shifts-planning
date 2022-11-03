@@ -9,6 +9,7 @@ from handlers.main_menu_handler import start, States
 from handlers.check_shifts_handlers import (check_weekly_shifts,
                                             check_daily_shift)
 from handlers.new_shifts_handlers import wait_shifts_from_user, update_shifts
+from handlers.weekly_income_handler import show_weekly_income
 
 
 def main() -> None:
@@ -49,9 +50,15 @@ def main() -> None:
     updater.dispatcher.add_handler(
         CallbackQueryHandler(start, pattern="main_menu")
     )
+    updater.dispatcher.add_handler(
+        CallbackQueryHandler(show_weekly_income, pattern="weekly_income")
+    )
 
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("start", start)],
+        entry_points=[
+            CommandHandler("start", start),
+            CommandHandler("menu", start)
+        ],
         states={
             States.CHOOSING: [
                 CallbackQueryHandler(
