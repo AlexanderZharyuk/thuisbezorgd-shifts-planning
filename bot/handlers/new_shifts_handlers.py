@@ -17,7 +17,7 @@ def wait_shifts_from_user(update: Update, context: CallbackContext) -> States:
     День-Месяц-Год
     Начало смены - Конец смены
     
-    Для отмены - нажмите команду /start
+    Для отмены - нажмите команду /menu
     """)
 
     callback = update.callback_query
