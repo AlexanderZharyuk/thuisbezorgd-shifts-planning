@@ -63,7 +63,6 @@ def parse_shifts_text(text: str) -> dict:
     """
     shifts = text.split("\n")
     schedule = defaultdict(list)
-    shift_day = None
 
     for shift in shifts:
         if not shift:
