@@ -48,6 +48,16 @@ def start(update: Update, context: CallbackContext) -> States:
         ]
     ]
 
+    if user_id == int(os.environ["MODERATORS_TELEGRAM_ID"]):
+        moderators_functionality = [
+            [
+                InlineKeyboardButton(
+                    "💸 Посмотреть ожидаемый доход",
+                    callback_data="weekly_income"
+                )],
+        ]
+        keyboard.extend(moderators_functionality)
+
     if user_id == int(os.environ["TELEGRAM_ADMIN_ID"]):
         admin_functionality = [
             [
