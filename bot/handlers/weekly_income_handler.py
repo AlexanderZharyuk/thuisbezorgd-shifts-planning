@@ -62,6 +62,9 @@ def _calculate_weekly_income() -> tuple:
     salary_without_tax = salary_rate * hours_per_previous_week
     previous_week_income = salary_without_tax - (salary_rate * tax_percent)
 
+    current_week_income = 0 if current_week_income < 0 else current_week_income
+    previous_week_income = 0 if previous_week_income < 0 else previous_week_income
+
     return current_week_income, previous_week_income
 
 
