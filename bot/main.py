@@ -6,9 +6,9 @@ from telegram.ext import (Updater, CommandHandler, CallbackQueryHandler,
                           ConversationHandler, MessageHandler, Filters)
 
 from handlers.main_menu_handler import start, States
-from handlers.check_shifts_handlers import (check_weekly_shifts,
-                                            check_daily_shift)
-from handlers.new_shifts_handlers import wait_shifts_from_user, update_shifts
+from handlers.check_shifts_handler import (check_weekly_shifts,
+                                           check_daily_shift)
+from handlers.new_shifts_handler import wait_shifts_from_user, update_shifts
 from handlers.weekly_income_handler import show_weekly_income
 
 
