@@ -54,7 +54,7 @@ def _parse_shifts_text(text: str) -> dict:
     return dict(schedule)
 
 
-def get_weekly_shifts(week: str) -> list[set]:
+def get_weekly_shifts(week: str) -> list[tuple]:
     """
     Return weekly shift from database.
     Variable 'week' can get only one of three parameters: 'current', 'next' or
@@ -74,7 +74,9 @@ def get_weekly_shifts(week: str) -> list[set]:
     ORDER BY shift_date
     """
     cursor.execute(query)
-    return cursor.fetchall()
+    weekly_shifts = cursor.fetchall()
+    connection.close()
+    return weekly_shifts
 
 
 def get_daily_shifts() -> str:
@@ -85,14 +87,16 @@ def get_daily_shifts() -> str:
     connection = sqlite3.connect(database_name)
     cursor = connection.cursor()
 
-    today = datetime.today()
+    today_date = datetime.today().date()
 
     query = f"""
     SELECT * FROM shifts
-    WHERE shift_date = '{today.date()}'
+    WHERE shift_date = '{today_date}'
     """
     cursor.execute(query)
-    return cursor.fetchall()
+    daily_shifts = cursor.fetchall()
+    connection.close()
+    return daily_shifts
 
 
 def update_next_week_shifts(text: str):
@@ -120,3 +124,84 @@ def update_next_week_shifts(text: str):
         """
     cursor.executemany(query, shifts)
     connection.commit()
+    connection.close()
+
+
+def get_future_shifts() -> list[tuple]:
+    """
+    Return future shifts.
+    """
+    today_date = datetime.today().date()
+    database_name = os.environ["DATABASE_NAME"]
+    connection = sqlite3.connect(database_name)
+    cursor = connection.cursor()
+    query = f"""
+        SELECT DISTINCT shift_date FROM shifts
+        WHERE shift_date >= '{today_date}'
+        ORDER BY shift_date
+    """
+    cursor.execute(query)
+    future_shifts = cursor.fetchall()
+    connection.close()
+    return future_shifts
+
+
+def get_shifts_on_day(date: str) -> list[tuple]:
+    """
+    Return list with shift on day from database.
+    """
+    database_name = os.environ["DATABASE_NAME"]
+    connection = sqlite3.connect(database_name)
+    cursor = connection.cursor()
+    query = f"""
+            SELECT shift_time_starts, shift_time_ends FROM shifts
+            WHERE shift_date = '{date}'
+        """
+    cursor.execute(query)
+    shifts = cursor.fetchall()
+    connection.close()
+    return shifts
+
+
+def delete_shifts_on_day(date: str):
+    """
+    Delete shifts on day from database.
+    """
+    database_name = os.environ["DATABASE_NAME"]
+    connection = sqlite3.connect(database_name)
+    cursor = connection.cursor()
+    query = f"""
+               DELETE FROM shifts
+               WHERE shift_date = '{date}'
+           """
+    cursor.execute(query)
+    connection.commit()
+    connection.close()
+
+
+def change_shifts_timings(date: str, new_timing: str):
+    """
+    Change shifts timings in database.
+    """
+    delete_shifts_on_day(date)
+    database_name = os.environ["DATABASE_NAME"]
+    connection = sqlite3.connect(database_name)
+    cursor = connection.cursor()
+
+    shift_timings = new_timing.split("\n")
+    new_shift_timings = []
+    for time in shift_timings:
+        shift_start_time, shift_end_time = time.split(" - ")
+        new_shift_timings.append((date, shift_start_time, shift_end_time))
+
+    query = f"""
+            INSERT INTO shifts(
+             shift_date,
+             shift_time_starts,
+             shift_time_ends
+             ) VALUES (?, ?, ?)
+            """
+    cursor.executemany(query, new_shift_timings)
+    connection.commit()
+    connection.close()
+
