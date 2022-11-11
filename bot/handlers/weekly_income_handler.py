@@ -6,7 +6,7 @@ from telegram import Update, ParseMode
 from telegram.ext import CallbackContext
 
 from bot.database_operations import get_weekly_shifts, calculate_weekdays
-from bot.handlers.check_shifts_handlers import get_shifts_timings
+from bot.handlers.check_shifts_handler import get_shifts_timings
 
 
 def _parse_hours_per_shift(shift_timings: list) -> int:
