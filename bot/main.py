@@ -10,6 +10,9 @@ from handlers.check_shifts_handler import (check_weekly_shifts,
                                            check_daily_shift)
 from handlers.new_shifts_handler import wait_shifts_from_user, update_shifts
 from handlers.weekly_income_handler import show_weekly_income
+from handlers.change_shifts_handler import (choose_shift_day_for_change,
+                                            choose_shift_for_change,
+                                            delete_shifts, change_shifts)
 
 
 def main() -> None:
@@ -64,16 +67,34 @@ def main() -> None:
                 CallbackQueryHandler(
                     wait_shifts_from_user,
                     pattern="update_next_weekly_plan"
+                ),
+                CallbackQueryHandler(
+                    choose_shift_day_for_change,
+                    pattern="change_shift"
                 )
             ],
             States.WEEKLY_SHIFTS: [
-                CallbackQueryHandler(
-                    start,
-                    pattern="main_menu"
-                ),
                 MessageHandler(
                     Filters.text, update_shifts
                 ),
+            ],
+            States.CHOOSE_SHIFT: [
+                CallbackQueryHandler(
+                    choose_shift_for_change
+                )
+            ],
+            States.CHANGE_SHIFT: [
+                CallbackQueryHandler(
+                    delete_shifts,
+                    pattern="delete"
+                ),
+                CallbackQueryHandler(
+                    choose_shift_day_for_change,
+                    pattern="cancel"
+                ),
+                MessageHandler(
+                    Filters.text, change_shifts
+                )
             ]
         },
         fallbacks=[MessageHandler(Filters.regex('^Done$'), None)],
