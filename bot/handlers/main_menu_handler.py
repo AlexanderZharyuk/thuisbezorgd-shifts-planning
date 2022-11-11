@@ -5,6 +5,7 @@ from textwrap import dedent
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CallbackContext
 
+# TODO Try to fix it later.
 import sys
 sys.path.append(".")
 
@@ -67,22 +68,18 @@ def start(update: Update, context: CallbackContext) -> States:
                 )],
             [
                 InlineKeyboardButton(
-                    "Добавить смену",
-                    callback_data="add_shift"
-                ),
-                InlineKeyboardButton(
-                    "Изменить смену",
-                    callback_data="change_shift"
-                ),
-            ],
-            [
-                InlineKeyboardButton(
                     "Обновить план на след. неделю",
                     callback_data="update_next_weekly_plan"
                 ),
             ]
         ]
 
+        keyboard[-1].append(
+            InlineKeyboardButton(
+                    "📄 Скорректировать смены",
+                    callback_data="change_shift"
+                )
+        )
         keyboard.extend(admin_functionality)
 
     reply_markup = InlineKeyboardMarkup(keyboard)
