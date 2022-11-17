@@ -25,6 +25,9 @@ def choose_shift_day_for_change(
             InlineKeyboardButton(f"{date[0]}", callback_data=date[0])
         ] for date in future_shifts
     ]
+    keyboard.append(
+        [InlineKeyboardButton("Главное меню", callback_data="main_menu")]
+    )
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     callback = update.callback_query
@@ -53,7 +56,6 @@ def choose_shift_for_change(update: Update, context: CallbackContext) -> States:
     {reformat_shifts}
     
     Отправьте измененные смены для того, чтобы скорректировать расписание.
-    Если не хотите ничего менять - нажмите /menu.
     """).replace("  ", "")
 
     reply_markup = InlineKeyboardMarkup(
@@ -66,10 +68,16 @@ def choose_shift_for_change(update: Update, context: CallbackContext) -> States:
             ],
             [
                 InlineKeyboardButton(
-                    "Назад",
+                    "Назад к просмотру смен",
                     callback_data="cancel"
                 )
-            ]
+            ],
+            [
+                InlineKeyboardButton(
+                    "Главное меню",
+                    callback_data="main_menu"
+                )
+            ],
         ]
     )
 
@@ -92,17 +100,27 @@ def delete_shifts(update: Update, context: CallbackContext):
     shifts_date = context.user_data.get("shifts_date")
     delete_shifts_on_day(date=shifts_date)
     message = dedent("""
-    Смены были удалены из БД.
-    Чтобы вернуться в меню - напишите команду /menu.
+    Смены были успешно удалены из БД.
     """)
 
+    reply_markup = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "Главное меню",
+                    callback_data="main_menu"
+                )
+            ]
+        ]
+    )
     callback = update.callback_query
     callback.answer()
     callback.edit_message_text(
         text=message,
         parse_mode=ParseMode.HTML,
+        reply_markup=reply_markup
+
     )
-    context.user_data["message_id"] = callback.message.message_id
 
 
 def change_shifts(update: Update, context: CallbackContext):
@@ -120,7 +138,18 @@ def change_shifts(update: Update, context: CallbackContext):
     new_timings = update.message.text
     date = context.user_data["shifts_date"]
     change_shifts_timings(date=date, new_timing=new_timings)
-    message_to_user = update.message.reply_text(
-        "Смены были обновлены, чтобы вернуться - нажмите /menu"
+
+    reply_markup = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "Главное меню",
+                    callback_data="main_menu"
+                )
+            ]
+        ]
     )
-    context.user_data["message_id"] = message_to_user.message_id
+    update.message.reply_text(
+        "Смены на этот день были обновлены.",
+        reply_markup=reply_markup
+    )
