@@ -2,7 +2,8 @@ import os
 from textwrap import dedent
 from datetime import datetime, date, time
 
-from telegram import Update, ParseMode
+from telegram import (Update, ParseMode, InlineKeyboardMarkup,
+                      InlineKeyboardButton)
 from telegram.ext import CallbackContext
 
 from bot.database_operations import get_weekly_shifts, calculate_weekdays
@@ -94,15 +95,22 @@ def show_weekly_income(update: Update, context: CallbackContext) -> None:
     <b>{previous_week_beginning.day} {previous_week_beginning.strftime("%B")} \
      - {previous_week_ending.day} {previous_week_ending.strftime("%B")}</b>: \
     {previous_week_income} EUR.
-    
-    Чтобы вернуться в меню - напишите /menu.
     """).replace("  ", "")
 
-    context.user_data["message_id"] = callback.message.message_id
-    context.user_data["chat_id"] = callback.message.chat_id
+    reply_markup = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "Главное меню",
+                    callback_data="main_menu"
+                )
+            ]
+        ]
+    )
 
     callback.edit_message_text(
         text=message,
-        parse_mode=ParseMode.HTML
+        parse_mode=ParseMode.HTML,
+        reply_markup=reply_markup
     )
 
