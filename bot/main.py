@@ -1,10 +1,10 @@
 import os
-import sqlite3
 
 from dotenv import load_dotenv
 from telegram.ext import (Updater, CommandHandler, CallbackQueryHandler,
                           ConversationHandler, MessageHandler, Filters)
 
+from database_operations import create_database
 from handlers.main_menu_handler import start, States
 from handlers.check_shifts_handler import (check_weekly_shifts,
                                            check_daily_shift)
@@ -19,16 +19,7 @@ def main() -> None:
     load_dotenv()
     telegram_bot_token = os.environ["TELEGRAM_BOT_TOKEN"]
     database_name = os.environ["DATABASE_NAME"]
-
-    connection = sqlite3.connect(database_name)
-    cursor = connection.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS shifts
-        ([shift_id] INTEGER PRIMARY KEY AUTOINCREMENT,
-         [shift_time_starts] TEXT, 
-        [shift_time_ends] TEXT, [shift_date] TEXT)
-    """)
-    connection.commit()
+    create_database(database_name=database_name)
 
     updater = Updater(telegram_bot_token)
 
@@ -51,16 +42,13 @@ def main() -> None:
         )
     )
     updater.dispatcher.add_handler(
-        CallbackQueryHandler(start, pattern="main_menu")
-    )
-    updater.dispatcher.add_handler(
         CallbackQueryHandler(show_weekly_income, pattern="weekly_income")
     )
 
     conv_handler = ConversationHandler(
         entry_points=[
             CommandHandler("start", start),
-            CommandHandler("menu", start)
+            CallbackQueryHandler(start, pattern="main_menu")
         ],
         states={
             States.CHOOSING: [
