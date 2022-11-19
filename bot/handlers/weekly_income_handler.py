@@ -6,7 +6,8 @@ from telegram import (Update, ParseMode, InlineKeyboardMarkup,
                       InlineKeyboardButton)
 from telegram.ext import CallbackContext
 
-from bot.database_operations import get_weekly_shifts, calculate_weekdays
+from bot.common_functions import calculate_weekdays
+from bot.database_operations import get_weekly_shifts, get_user_language
 from bot.handlers.check_shifts_handler import get_shifts_timings
 
 
@@ -83,30 +84,61 @@ def show_weekly_income(update: Update, context: CallbackContext) -> None:
         week="previous"
     )
     current_week_income, previous_week_income = _calculate_weekly_income()
-    message = dedent(f"""
-    💸 Ожидаемый доход (С вычетом налогов):
-    
-    За текущую неделю
-    <b>{current_week_beginning.day} {current_week_beginning.strftime("%B")} - \
-    {current_week_ending.day} {current_week_ending.strftime("%B")}</b>: \
-    {current_week_income} EUR.
-    
-    За предыдущую неделю
-    <b>{previous_week_beginning.day} {previous_week_beginning.strftime("%B")} \
-     - {previous_week_ending.day} {previous_week_ending.strftime("%B")}</b>: \
-    {previous_week_income} EUR.
-    """).replace("  ", "")
 
-    reply_markup = InlineKeyboardMarkup(
-        [
+    user_language = context.user_data.get("user_language")
+    if not user_language:
+        user_language = get_user_language(callback.from_user.id)
+
+    if user_language == "RU":
+        message = dedent(f"""
+        💸 Ожидаемый доход (С вычетом налогов):
+        
+        За текущую неделю
+        <b>{current_week_beginning.day} \
+        {current_week_beginning.strftime("%B")} - {current_week_ending.day} \
+        {current_week_ending.strftime("%B")}</b>: {current_week_income} EUR.
+        
+        За предыдущую неделю
+        <b>{previous_week_beginning.day} \
+        {previous_week_beginning.strftime("%B")} - {previous_week_ending.day} \
+        {previous_week_ending.strftime("%B")}</b>: {previous_week_income} EUR.
+        """).replace("  ", "")
+
+        reply_markup = InlineKeyboardMarkup(
             [
-                InlineKeyboardButton(
-                    "Главное меню",
-                    callback_data="main_menu"
-                )
+                [
+                    InlineKeyboardButton(
+                        "Главное меню",
+                        callback_data="main_menu"
+                    )
+                ]
             ]
-        ]
-    )
+        )
+    else:
+        message = dedent(f"""
+        💸 Expected income (With taxes):
+
+        For current week
+        <b>{current_week_beginning.day} \
+        {current_week_beginning.strftime("%B")} - {current_week_ending.day} \
+        {current_week_ending.strftime("%B")}</b>: {current_week_income} EUR.
+
+        For last week
+        <b>{previous_week_beginning.day} \
+        {previous_week_beginning.strftime("%B")} - {previous_week_ending.day} \
+        {previous_week_ending.strftime("%B")}</b>: {previous_week_income} EUR.
+        """).replace("  ", "")
+
+        reply_markup = InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        "Main menu",
+                        callback_data="main_menu"
+                    )
+                ]
+            ]
+        )
 
     callback.edit_message_text(
         text=message,

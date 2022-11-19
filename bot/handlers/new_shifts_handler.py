@@ -11,23 +11,44 @@ def wait_shifts_from_user(update: Update, context: CallbackContext) -> States:
     """
     Add shifts to the next week.
     """
-    message = dedent("""
-    Отправь расписание смен на следующую неделю в формате:
-    
-    День-Месяц-Год
-    Начало смены - Конец смены
-    """)
+    user_language = context.user_data.get("user_language")
 
-    reply_markup = InlineKeyboardMarkup(
-        [
+    if user_language == "RU":
+        message = dedent("""
+        Отправь расписание смен на следующую неделю в формате:
+        
+        День-Месяц-Год
+        Начало смены - Конец смены
+        """)
+
+        reply_markup = InlineKeyboardMarkup(
             [
-                InlineKeyboardButton(
-                    "Главное меню",
-                    callback_data="main_menu"
-                )
+                [
+                    InlineKeyboardButton(
+                        "Главное меню",
+                        callback_data="main_menu"
+                    )
+                ]
             ]
-        ]
-    )
+        )
+    else:
+        message = dedent("""
+        Send your shifts for next week in format:
+
+        DAY-MONTH-YEAR
+        Shift start time - Shift end time
+        """)
+
+        reply_markup = InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        "Main menu",
+                        callback_data="main_menu"
+                    )
+                ]
+            ]
+        )
 
     callback = update.callback_query
     callback.answer()
@@ -41,34 +62,72 @@ def wait_shifts_from_user(update: Update, context: CallbackContext) -> States:
 
 
 def update_shifts(update: Update, context: CallbackContext) -> None:
-    reply_markup = InlineKeyboardMarkup(
-        [
+    """
+    Update shifts plan.
+    """
+    user_language = context.user_data.get("user_language")
+
+    if user_language == "RU":
+        reply_markup = InlineKeyboardMarkup(
             [
-                InlineKeyboardButton(
-                    "Главное меню",
-                    callback_data="main_menu"
-                )
+                [
+                    InlineKeyboardButton(
+                        "Главное меню",
+                        callback_data="main_menu"
+                    )
+                ]
             ]
-        ]
-    )
-    try:
-        update_next_week_shifts(update.message.text)
-    # TODO Localize exception
-    except Exception as error:
-        update.message.reply_text(f"Возникла ошибка. Попробуй снова.")
+        )
+        try:
+            update_next_week_shifts(update.message.text)
+        # TODO Localize exception
+        except Exception as error:
+            update.message.reply_text(f"Возникла ошибка. Попробуй снова.")
+        else:
+            context.bot.delete_message(
+                chat_id=context.user_data.get("chat_id"),
+                message_id=context.user_data.get("message_id")
+            )
+            context.bot.delete_message(
+                chat_id=context.user_data.get("chat_id"),
+                message_id=update.message.message_id
+            )
+            message = update.message.reply_text(
+                dedent("""
+                Смены были успешно занесены в БД.
+                """),
+                reply_markup=reply_markup
+            )
+            context.user_data["message_id"] = message.message_id
     else:
-        context.bot.delete_message(
-            chat_id=context.user_data.get("chat_id"),
-            message_id=context.user_data.get("message_id")
+        reply_markup = InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        "Main menu",
+                        callback_data="main_menu"
+                    )
+                ]
+            ]
         )
-        context.bot.delete_message(
-            chat_id=context.user_data.get("chat_id"),
-            message_id=update.message.message_id
-        )
-        message = update.message.reply_text(
-            dedent("""
-            Смены были успешно занесены в БД.
-            """),
-            reply_markup=reply_markup
-        )
-        context.user_data["message_id"] = message.message_id
+        try:
+            update_next_week_shifts(update.message.text)
+        # TODO Localize exception
+        except Exception as error:
+            update.message.reply_text(f"Error. Try again please.")
+        else:
+            context.bot.delete_message(
+                chat_id=context.user_data.get("chat_id"),
+                message_id=context.user_data.get("message_id")
+            )
+            context.bot.delete_message(
+                chat_id=context.user_data.get("chat_id"),
+                message_id=update.message.message_id
+            )
+            message = update.message.reply_text(
+                dedent("""
+                        Shifts was successfully added to database.
+                        """),
+                reply_markup=reply_markup
+            )
+            context.user_data["message_id"] = message.message_id

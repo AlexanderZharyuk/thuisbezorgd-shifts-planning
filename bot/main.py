@@ -4,8 +4,8 @@ from dotenv import load_dotenv
 from telegram.ext import (Updater, CommandHandler, CallbackQueryHandler,
                           ConversationHandler, MessageHandler, Filters)
 
-from database_operations import create_database
-from handlers.main_menu_handler import start, States
+from database_operations import create_database, change_user_language
+from handlers.main_menu_handler import start, register_user, States
 from handlers.check_shifts_handler import (check_weekly_shifts,
                                            check_daily_shift)
 from handlers.new_shifts_handler import wait_shifts_from_user, update_shifts
@@ -59,6 +59,18 @@ def main() -> None:
                 CallbackQueryHandler(
                     choose_shift_day_for_change,
                     pattern="change_shift"
+                ),
+                CallbackQueryHandler(
+                    register_user,
+                    pattern="RU_language"
+                ),
+                CallbackQueryHandler(
+                    register_user,
+                    pattern="EN_language"
+                ),
+                CallbackQueryHandler(
+                    change_user_language,
+                    pattern="change_language"
                 )
             ],
             States.WEEKLY_SHIFTS: [

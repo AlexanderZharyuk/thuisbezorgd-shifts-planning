@@ -1,8 +1,19 @@
 import os
 import sqlite3
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from collections import defaultdict
+from typing import NamedTuple
+
+from telegram import Update
+from telegram.ext import CallbackContext
+
+from common_functions import calculate_weekdays
+
+
+class User(NamedTuple):
+    telegram_id: int
+    language: str
 
 
 def create_database(database_name: str) -> None:
@@ -17,34 +28,14 @@ def create_database(database_name: str) -> None:
              [shift_time_starts] TEXT, 
             [shift_time_ends] TEXT, [shift_date] TEXT)
         """)
+    cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users
+            ([user_id] INTEGER PRIMARY KEY AUTOINCREMENT,
+             [telegram_id] INT, 
+             [language] TEXT)
+        """)
     connection.commit()
     connection.close()
-
-
-def calculate_weekdays(week: str) -> tuple[datetime, datetime]:
-    """
-    Calculate week beginning and starting dates.
-    """
-    today = datetime.today()
-    if week == "current":
-        date_of_week_beginning = today - timedelta(days=today.weekday())
-        date_of_week_ending = date_of_week_beginning + timedelta(days=6)
-    elif week == "next":
-        day_number = today.weekday()
-        if not day_number:
-            date_of_week_beginning = today + timedelta(days=7)
-        else:
-            date_of_week_beginning = today + timedelta(days=7 - day_number)
-        date_of_week_ending = date_of_week_beginning + timedelta(days=6)
-    elif week == "previous":
-        day_number = today.weekday()
-        if not day_number:
-            date_of_week_beginning = today - timedelta(days=7)
-        else:
-            date_of_week_beginning = today - timedelta(days=7 + day_number)
-        date_of_week_ending = date_of_week_beginning + timedelta(days=6)
-
-    return date_of_week_beginning.date(), date_of_week_ending.date()
 
 
 def _parse_shifts_text(text: str) -> dict:
@@ -221,3 +212,103 @@ def change_shifts_timings(date: str, new_timing: str):
     connection.commit()
     connection.close()
 
+
+def check_user_in_database(telegram_id: int) -> bool | None:
+    """
+    Check user in DB by telegram ID.
+    """
+    database_name = os.environ["DATABASE_NAME"]
+    connection = sqlite3.connect(database_name)
+    cursor = connection.cursor()
+
+    query = f"""
+        SELECT * FROM users
+        WHERE telegram_id == '{telegram_id}'
+    """
+    sql_query = cursor.execute(query)
+    user = sql_query.fetchone()
+    connection.close()
+    return True if user is not None else user
+
+
+def save_user_to_database(telegram_id: int) -> None:
+    """
+    Save user to DB.
+    """
+    database_name = os.environ["DATABASE_NAME"]
+    connection = sqlite3.connect(database_name)
+    cursor = connection.cursor()
+
+    query = """
+        INSERT INTO users(telegram_id) VALUES (?)
+    """
+
+    cursor.execute(query, (telegram_id, ))
+    connection.commit()
+    connection.close()
+
+
+def get_user_language(telegram_id: int) -> str | None:
+    """
+    Get user language from DB.
+    """
+    database_name = os.environ["DATABASE_NAME"]
+    connection = sqlite3.connect(database_name)
+    cursor = connection.cursor()
+
+    query = f"""
+            SELECT telegram_id, language FROM users
+            WHERE telegram_id = '{telegram_id}'
+        """
+
+    sql_query = cursor.execute(query)
+    user_info = sql_query.fetchone()
+    user = User(telegram_id=user_info[0], language=user_info[1])
+    connection.close()
+    return user.language
+
+
+def add_language_to_user(telegram_id: int, language: str) -> None:
+    database_name = os.environ["DATABASE_NAME"]
+    connection = sqlite3.connect(database_name)
+    cursor = connection.cursor()
+
+    query = f"""
+                UPDATE users
+                SET language = '{language}'
+                WHERE telegram_id = '{telegram_id}'
+            """
+
+    cursor.execute(query)
+    connection.commit()
+    connection.close()
+
+
+def change_user_language(update: Update, context: CallbackContext):
+    """
+    Change user prefer language.
+    """
+    from handlers.main_menu_handler import greeting_block, States
+
+    language_code = context.user_data.get("user_language")
+    new_language = "EN" if language_code == "RU" else "RU"
+    callback = update.callback_query
+    telegram_id = callback.from_user.id
+    context.user_data["user_language"] = new_language
+
+    database_name = os.environ["DATABASE_NAME"]
+    connection = sqlite3.connect(database_name)
+    cursor = connection.cursor()
+
+    query = f"""
+                UPDATE users
+                SET language = '{new_language}'
+                WHERE telegram_id = '{telegram_id}'
+            """
+
+    cursor.execute(query)
+    connection.commit()
+    connection.close()
+
+    greeting_block(update, context)
+    return States.CHOOSING
