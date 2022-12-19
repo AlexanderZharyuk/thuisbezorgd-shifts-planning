@@ -42,7 +42,7 @@ def _parse_shifts_text(text: str) -> dict:
     """
     Parse text from user to dict-format.
     """
-    shifts = text.split("\n")
+    shifts = text.replace("\xa0", "").split("\n")
     schedule = defaultdict(list)
 
     for shift in shifts:
